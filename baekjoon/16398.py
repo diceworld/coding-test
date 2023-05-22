@@ -1,48 +1,41 @@
+import heapq
 from sys import stdin
 
 
-def find(_parent, _x):  # 부모 찾기
-    while _x != _parent[_x]:
-        _x = _parent[_x]
-    return _x
+def find(_parent, x):  # 집합 찾기
+    while x != _parent[x]:
+        _parent[x] = _parent[_parent[x]]  # 경로 압축
+        x = _parent[x]
+    return x
 
 
-def union(_parent, _a, _b):  # 합치기
-    _a = find(_parent, _a)
-    _b = find(_parent, _b)
+def union(u, v):  # 집합 합치기
+    u = find(parent, u)
+    v = find(parent, v)
 
-    if _a > _b:
-        _parent[_a] = _b
-    elif _b > _a:
-        _parent[_b] = _a
+    if u > v:
+        parent[u] = v
+    elif u < v:
+        parent[v] = u
 
 
-N = int(stdin.readline())  # 행성의 수
-parent = [0] * (N + 1)  # 부모 리스트
-edges = []  # 간선 리스트
-graph = []  # 그래프
-result = 0  # cost 결과
-count = 0  # union 횟수
+n = int(stdin.readline())  # 행성의 수
+parent = list(range(n + 1))  # 부모 테이블
+q = []
+matrix = []  # 행성간의 플로우 관리 비용
+result = 0  # MST 구성 비용
 
-for i in range(1, N + 1):  # 부모 초기화
-    parent[i] = i
+for _ in range(n):  # 인접 행렬 입력
+    matrix.append(list(map(int, stdin.readline().split())))
 
-for _ in range(N):  # 그래프 입력
-    graph.append(list(map(int, stdin.readline().split())))
+for i in range(1, n):  # 인접 행렬을 인접 리스트로 변경
+    for j in range(i):
+        heapq.heappush(q, (matrix[i][j], i + 1, j + 1))
 
-for i in range(N):  # 그래프 > 간선 리스트
-    for j in range(i + 1, N):
-        edges.append((graph[i][j], i + 1, j + 1))
+while q:
+    w, u, v = heapq.heappop(q)  # cost, 정점 u, 정점 v
+    if find(parent, u) != find(parent, v):
+        union(u, v)
+        result += w
 
-edges.sort()  # cost 기준 정렬
-
-for cost, a, b in edges:  # MST 생성 및 cost 계산
-    if find(parent, a) != find(parent, b):
-        union(parent, a, b)
-        result += cost
-        count += 1
-
-    if count == N + 1:
-        break
-
-print(result)  # cost 결과 출력
+print(result)
